@@ -1,0 +1,12 @@
+<xml>
+    <app>
+        <name>app</name>
+        <port>8080</port>
+    </app>
+
+    <mysql>
+        <host>localhost:3306</host>
+        <username>root</username>
+        <password>123456</password>
+    </mysql>
+</xml>

@@ -2,12 +2,29 @@
 #include "../summer/summer.h"
 
 std::string _info(Method method, std::string data) {
-    return "<h1>Information Page</h1>";
+    if (method == Methods.GET) {
+        return "GET";
+    } else {
+        return "Invalid Request Method";
+    }
 }
 
+
 std::string _user(Method method, std::string data) {
-    return "<h1>Welcome, Dear User!</h1>";
+    Sql sql("demo_db");
+    sql.query("select * from demo_table");
+    std::string res = "";
+
+    for (int i = 0; i < sql.result.size(); i ++) {
+        for (int k = 0; k < sql.result.at(i).size(); k ++) {
+            res += sql.result.at(i).at(k) + " ";
+        }
+        res += "<br/>";
+    }
+
+    return res;
 }
+
 
 // Get current system time
 std::string _time(Method method, std::string data) {

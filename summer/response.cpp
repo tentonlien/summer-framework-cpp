@@ -1,9 +1,10 @@
+/* Created by Tenton Lien on 4/6/2019 */
+
 #include <iostream>
 #include <netinet/in.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "methods.h"
 #include <string>
 #include "summer.h"
 #include <sys/socket.h>
@@ -33,7 +34,7 @@ void httpResponse() {
     }
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PARAM_APP_PORT);
+    address.sin_port = htons(param_app_port);
 
     // Forcefully attaching socket to the port 8080
     if (bind(server_fd, (struct sockaddr *)&address,
@@ -65,6 +66,43 @@ void httpResponse() {
             methodString += buffer[pos];
             pos ++;
         }
+
+        Method method = 0;  // Default method is GET
+
+        if (methodString == "GET") {
+            method = Methods.GET;
+        } else if (methodString == "POST") {
+            method = Methods.POST;
+        } else if (methodString == "PUT") {
+            method = Methods.PUT;
+        } else if (methodString == "PATCH") {
+            method = Methods.PATCH;
+        } else if (methodString == "DELETE") {
+            method = Methods.DELETE;
+        } else if (methodString == "COPY") {
+            method= Methods.COPY;
+        } else if (methodString == "HEAD") {
+            method = Methods.HEAD;
+        } else if (methodString == "OPTIONS") {
+            method = Methods.OPTIONS;
+        } else if (methodString == "LINK") {
+            method = Methods.LINK;
+        } else if (methodString == "UNLINK") {
+            method = Methods.UNLINK;
+        } else if (methodString == "PURGE") {
+            method = Methods.PURGE;
+        } else if (methodString == "LOCK") {
+            method = Methods.LOCK;
+        } else if (methodString == "UNLOCK") {
+            method = Methods.UNLOCK;
+        } else if (methodString == "PROPFIND") {
+            method = Methods.PROPFIND;
+        } else if (methodString == "VIEW") {
+            method = Methods.VIEW;
+        } else {
+            method = Methods.UNKNOWN;
+        }
+
         pos ++;
 
         // Retrieve request URL
@@ -72,7 +110,7 @@ void httpResponse() {
             url += buffer[pos];
             pos ++;
         }
-        Method method(methodString);
+        
         std::string responseString = router(method, url);
         char* response = const_cast<char*>(responseString.c_str());
         

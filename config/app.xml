@@ -5,8 +5,9 @@
     </app>
 
     <mysql>
-        <host>localhost:3306</host>
-        <username>root</username>
+        <host>localhost</host>
+        <port>3306</port>
+        <user>root</user>
         <password>123456</password>
     </mysql>
 </xml>

@@ -2,7 +2,6 @@
 
 #include "router.h"
 #include <iostream>
-#include "methods.h"
 #include <string>
 
 std::string router(Method method, std::string url) {

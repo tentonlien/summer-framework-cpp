@@ -1,11 +1,12 @@
 /* Created by Tenton Lien on 4/7/2019 */
 
 #include <mysql.h>
+#include "sql.h"
 #include <cstdio>
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include "../summer.h"
+#include "application.h"
 
 std::vector<std::vector<std::string>> mysql(std::string dbName, std::string sqlQuery) {
     MYSQL *conn;
@@ -15,20 +16,22 @@ std::vector<std::vector<std::string>> mysql(std::string dbName, std::string sqlQ
     std::vector<std::vector<std::string>> result;
 
     /* Connect to database */
-    if (!mysql_real_connect(conn, param_mysql_host,
-                            param_mysql_user, 
-                            param_mysql_password, 
+    if (!mysql_real_connect(conn,
+                            application.getProperty<std::string>("summer.datasource.url").c_str(), 
+                            application.getProperty<std::string>("summer.datasource.username").c_str(), 
+                            application.getProperty<std::string>("summer.datasource.password").c_str(), 
                             (char*)(dbName.c_str()), 
-                            param_mysql_port, 
+                            3306, 
                             NULL, 0))
     {
-        printLog(Logs.ERROR, mysql_error(conn));
-        return result;
+        // LogMessage errorConnect("", LogMessageType.ERROR, mysql_error(conn));
+        throw DatabaseConnectException();
+        // return result;
     }
 
     /* Send SQL query */
     if (mysql_query(conn, sqlQuery.c_str())) {
-        printLog(Logs.ERROR, mysql_error(conn));
+        // LogMessage errorQuery("", LogMessageType.ERROR, mysql_error(conn));
         return result;
     }
     res = mysql_use_result(conn);

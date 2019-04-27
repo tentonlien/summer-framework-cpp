@@ -3,6 +3,7 @@
 #ifndef SQL_H
 #define SQL_H
 
+#include <exception>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,14 @@ class Sql {
 
     private:
         std::string dbName;
+};
+
+
+struct DatabaseConnectException: public std::exception {
+  const char * what () const throw ()
+  {
+    return "Can't connect to the database";
+  }
 };
 
 #endif

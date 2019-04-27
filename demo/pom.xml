@@ -1,0 +1,12 @@
+<project>
+    <name>DemoApplication</name>
+    <version>1.0</version>
+    <description>A Demo Project for Summer Framework</description>
+
+    <dependencies>
+        <dependency>summer-core</dependency>
+        <dependency>summer-web</dependency>
+        <dependency>summer-sql</dependency>
+        <dependency>summer-orm</dependency>
+    </dependencies>
+</project>

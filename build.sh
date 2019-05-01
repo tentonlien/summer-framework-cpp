@@ -1,1 +1,0 @@
-g++ -Irepository/tinyxml/ ./cli-tool/summer-cli.cpp ./repository/tinyxml/*.cpp -o ./summer # && summer build

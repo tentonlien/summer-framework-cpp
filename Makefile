@@ -1,15 +1,14 @@
 CC       = g++
-CFLAGS   = -Wall -O3   
+CFLAGS   = -Wall -O2   
 CXXFLAGS = 
-INCLUDE  = -I repository/tinyxml2/7.0.1
+INCLUDE  = -I repository/tinyxml2/7.0.1 -I ./repository/org/summerframework/summer-core/1.0/include
 TARGET   = summer
 #LIBPATH  = ./lib
 
-OBJS     = summercli.o tinyxml2.o
-SRCS     = ./cli-tool/summer-cli.cpp ./repository/tinyxml2/7.0.1/tinyxml2.cpp
+OBJS     = SummerCLI.o tinyxml2.o summer.o
+SRCS     = ./cli-tool/SummerCLI.cpp ./repository/tinyxml2/7.0.1/tinyxml2.cpp ./repository/org/summerframework/summer-core/1.0/src/summer.cpp
  
 $(OBJS):$(SRCS)
-	$(CC) $(CFLAGS) $(INCLUDE) $(SRCS) -o $(TARGET)
-# $(CC) -shared -fPIC -o $(TARGET) $(OBJS)    
-# mv $(TARGET) $(LIBPATH)
-# rm -f  $(OBJS)
+	@echo "Building Summer CLI..."
+	@$(CC) $(CFLAGS) $(INCLUDE) $(SRCS) -o $(TARGET)
+	@echo "Complete."

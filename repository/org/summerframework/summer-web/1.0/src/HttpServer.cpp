@@ -10,9 +10,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-// #include "summer.h"
 #include "web.h"
-// #include "application.h"  // bad
 
 extern void router(HttpRequest*, HttpResponse*);
 
@@ -35,7 +33,7 @@ void HttpServer::start() {
         logManager.addFatalError("Http server creates socket failed");
     }
 
-    // Forcefully attaching socket to the port 8080
+    // Forcefully attaching socket to the port
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
                    &opt, sizeof(opt)))
     {
@@ -45,7 +43,6 @@ void HttpServer::start() {
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port =htons(this -> serverPort);
 
-    // Forcefully attaching socket to the port 8080
     if (bind(server_fd, (struct sockaddr *)&address,
              sizeof(address)) < 0)
     {
@@ -71,10 +68,8 @@ void HttpServer::start() {
         valread = read(new_socket, buffer, 1024);
 
         HttpRequest request(buffer);
-        //std::cout << buffer << std::endl;
         HttpResponse response;
         router(&request, &response);
-        // char* response = const_cast<char*>(responseString.c_str());
         std::string temp = response.generate();
         
         send(new_socket, const_cast<char*>(temp.c_str()), temp.length(), 0);

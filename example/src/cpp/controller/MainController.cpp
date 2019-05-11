@@ -9,11 +9,11 @@ using namespace std;
 
 extern string registerService(UserEntity);
 
-/// RestController
+///RestController
 class MainController : public Controller
 {
   public:
-    /// RequestMapping("/user")
+    ///RequestMapping("/user")
     UserEntity getUser() {
         UserEntity user;
         user.setName("Tom");
@@ -21,7 +21,7 @@ class MainController : public Controller
         return user;
     }
 
-    /// RequestMapping("/info")
+    ///RequestMapping(value="/info",method=RequestMethod.GET)
     string getInfo() {
         if (request -> method == HttpRequestMethod.GET) {
             return "GET";
@@ -30,7 +30,7 @@ class MainController : public Controller
         }
     }
 
-    /// RequestMapping("/login")
+    ///RequestMapping("/login")
     std::string getUser2() {
         std::string res = "";
         try {
@@ -48,7 +48,7 @@ class MainController : public Controller
     }
 
     // Get current system time
-    /// RequestMapping("/time")
+    ///RequestMapping("/time")
     string getTime() {
         time_t t = time(NULL);
 	    char buf[64];

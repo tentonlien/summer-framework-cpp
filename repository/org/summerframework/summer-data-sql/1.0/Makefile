@@ -9,7 +9,7 @@ OBJS     = SqlQueryResult.o MysqlConnector.o
 SRCS     = src/SqlQueryResult.cpp src/MysqlConnector.cpp
  
 $(OBJS):$(SRCS)
-	$(CC) $(CFLAGS) $(INCLUDE) -c $^
-	$(CC) -shared -fPIC -o $(TARGET) $(OBJS)    
-	mv $(TARGET) $(LIBPATH)
-	rm -f  $(OBJS)
+	@$(CC) $(CFLAGS) $(INCLUDE) -c $^
+	@$(CC) -shared -fPIC -o $(TARGET) $(OBJS)    
+	@mv $(TARGET) $(LIBPATH)
+	@rm -f  $(OBJS)

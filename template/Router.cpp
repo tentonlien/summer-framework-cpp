@@ -17,11 +17,11 @@ void router(HttpRequest* request, HttpResponse* response) {
 
 {{repeat-start id=2}}    else if (request -> uri == "{{uri}}") {
         returnData = {{object-name-3}}.{{function-name}}();
-    } {{repeat-end}}{{repeat-start id=3}}else if (request -> uri == "{{uri}}") {
-        UserEntity user = {{object-name-4}}.{{function-name}}();
+    } {{repeat-end}}{{repeat-start id=3}}else if (request -> uri == "{{uri-2}}") {
+        {{class-name-2}} {{object-name-4}} = {{object-name-5}}.{{function-name-2}}();
         JsonParser jsonParser;
-        jsonParser.createKey("name", user.getName());
-        jsonParser.createKey("password", user.getPassword());
+        {{json-keys}}
+        // jsonParser.createKey("key-name", object-name-6.function-name-3());
         returnData = jsonParser.toString();
         
     } {{repeat-end}} else {

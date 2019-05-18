@@ -10,6 +10,6 @@ SRCS     = src/Controller.cpp src/HttpRequest.cpp src/HttpResponse.cpp src/HttpS
  
 $(OBJS):$(SRCS)
 	@$(CC) $(CFLAGS) $(INCLUDE) -c $^
-	@$(CC) -shared -fPIC -o $(TARGET) $(OBJS)    
+	@$(CC) -shared -fPIC -pthread -o $(TARGET) $(OBJS)    
 	@mv $(TARGET) $(LIBPATH)
 	@rm -f  $(OBJS)

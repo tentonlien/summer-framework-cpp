@@ -4,15 +4,38 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <mutex>
 #include <netinet/in.h>
 #include <regex>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "ThreadPool.h"
 #include "web.h"
 
 extern void router(HttpRequest*, HttpResponse*);
+
+struct Entity {
+    int sockfd;
+    struct sockaddr_in client;
+};
+
+
+void handle(struct Entity entity) {
+    char buffer[1024] = {0};
+    int valueRead = read(entity.sockfd, buffer, 1024);
+    if (valueRead > 0) {
+        HttpRequest request(buffer);
+        HttpResponse response;
+        router(&request, &response);
+        std::string temp = response.generate();
+        
+        send(entity.sockfd, const_cast<char*>(temp.c_str()), temp.length(), 0);
+    }
+    close(entity.sockfd);
+}
+
 
 HttpServer::HttpServer(std::string name, unsigned int port) {
     this -> serverName = name;
@@ -22,11 +45,10 @@ HttpServer::HttpServer(std::string name, unsigned int port) {
 
 
 void HttpServer::start() {
-    int server_fd, new_socket, valread;
+    int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1024] = {0};
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -39,9 +61,10 @@ void HttpServer::start() {
     {
         logManager.addFatalError("Http server sets socket failed");
     }
+
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port =htons(this -> serverPort);
+    address.sin_port = htons(this -> serverPort);
 
     if (bind(server_fd, (struct sockaddr *)&address,
              sizeof(address)) < 0)
@@ -49,7 +72,7 @@ void HttpServer::start() {
         logManager.addFatalError("Http server binds failed");
     }
     
-    if (listen(server_fd, 3) < 0) {
+    if (listen(server_fd, 200) < 0) {
         logManager.addFatalError("Http server listens at port failed");
     }
 
@@ -57,35 +80,34 @@ void HttpServer::start() {
 
     this -> testDatabaseConnection();
 
-    // Listen and deal with connection
-    while(1) {
+    ThreadPool pool(200);
+
+    // Listening and dealing with connection
+    while (1) {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
                                 (socklen_t *)&addrlen)) < 0)
         {
             logManager.addError("Http server accepts connection failed");
         }
-        
-        valread = read(new_socket, buffer, 1024);
+        struct Entity entity;
+        entity.client = address;
+        entity.sockfd = new_socket;
 
-        HttpRequest request(buffer);
-        HttpResponse response;
-        router(&request, &response);
-        std::string temp = response.generate();
-        
-        send(new_socket, const_cast<char*>(temp.c_str()), temp.length(), 0);
-        close(new_socket);
+        pool.enqueue(handle, entity);
     }
 }
 
 
 void HttpServer::testDatabaseConnection() {
-/*     if (true || application.existModule("summer-sql")) {
+/*     
+    if (true || application.existModule("summer-sql")) {
         // Test DB connection
         // TO-DO
-        usleep(800000);
+        usleep(1000000);
 
         if (true) {
             logManager.addWarning("Try to connect to database failed");
         }
-    } */
+    } 
+*/
 }

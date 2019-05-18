@@ -32,7 +32,7 @@ class Dependency {
 };
 
 std::vector<Dependency> dependencies;
-std::map<std::string,std::string> applicationProperties;
+std::map<std::string, std::string> applicationProperties;
 
 
 // Read POM file
@@ -82,6 +82,7 @@ int readPOM() {
                     }
                 }
                 dependencies.push_back(tempDependency);
+                std::cout << tempDependency.name << std::endl;
             }
         }
     }
@@ -123,7 +124,7 @@ void analyzeDependencies(std::string* buildCommand) {
 
 
 // Read data from src/resources/application.properties
-void readApplicationProperties() {
+void generateApplicationProperties() {
     std::string applicationPropertiesText;
 
     if (!readTextFile("src/resources/application.properties", &applicationPropertiesText)) {
@@ -184,10 +185,20 @@ void readApplicationProperties() {
             applicationProperties.insert({key, value});
         }
     }
+    TemplateHandler templateHandler(programDirectory + "/template/ApplicationProperties.cpp");
+    templateHandler.insertElement("data-appname", appName);
+
+    auto itetator = applicationProperties.begin();
+    while (itetator != applicationProperties.end()) {
+        templateHandler.insertRepeatedElement("0", "data-key", itetator -> first);
+        templateHandler.insertElement("data-value", itetator -> second);
+        itetator ++;
+    }
+    templateHandler.output("gen/ApplicationProperties.cpp");
 }
 
 
-void readBanner() {
+void generateBanner() {
     std::string bannerText;
     readTextFile("src/resources/banner.txt", &bannerText);  // TO-DO: Handle with error
     std::vector<std::string> bannerTextVector;
@@ -227,51 +238,67 @@ void readBanner() {
 }
 
 
-void doCreate(std::string projectName) {
-    char userResponse;
-    std::cout << "Are you going to build a Summer Web project? [Y/N]";
-    std::cin >> userResponse;
-    if (toupper(userResponse) == 'Y') {
-        std::cout << "Creating..." << std::endl << std::endl;
-        std::cout << "For web development, some required modules listed below have been auto imported." << std::endl;
-        std::cout << "org.summerframework.summer-web.1.0" << std::endl;
-        std::cout << "org.summerframework.summer-json-wrapper.1.0" << std::endl;
-        std::cout << "org.summerframework.summer-data-sql.1.0" << std::endl << std::endl;;
+class EntityClass {
+  public:
+    std::string name;
+    std::vector<std::string> vars;
+};
 
-        std::cout << "Complete. " << std::endl;
-    } else {
-        std::cout << "This part is still in test phase." << std::endl;
+
+void generateRouter() {
+    // Parsing entity annotations
+    std::string entityDir = "src/cpp/entity/";
+    std::vector<EntityClass> entityClasses;
+    std::vector<std::string> fileList = getFiles(entityDir);
+    for (size_t i = 0; i < fileList.size(); i ++) {
+        EntityClass entityClass;
+        std::string entityClassString;
+        readTextFile(entityDir + fileList[i], &entityClassString);
+        //std::cout << entityClass << std::endl;
+        size_t pos = entityClassString.find("class ");
+        if (pos != std::string::npos) {
+            pos += 6;
+            size_t pos2 = pos;
+             while (entityClassString[pos2] != ' ' &&
+                    entityClassString[pos2] != '{' &&
+                    entityClassString[pos2] != ':' &&
+                    pos2 < entityClassString.length()) {
+                pos2 ++;
+            }
+            entityClass.name = entityClassString.substr(pos, pos2 - pos);
+        }
+        std::cout << "Class Name: " << entityClass.name << std::endl;
+
+        std::regex memberVariableRE("((string)|(std::string))[\\s]+[[:alnum:]]+[\\s]*;");
+        std::regex memberMethodRE("((void)|(string))[\\s]+[[:alnum:]]+[\\s]*[\\(].*[\\)]");
+        std::smatch result;
+        std::string temp = entityClassString;
+
+        while (std::regex_search(temp, result, memberVariableRE)) {
+            std::cout << "Search member variable: " << result.str() << std::endl;
+            std::smatch result2;
+            std::string temp2 = result.str();
+            if (std::regex_search(temp2, result2, std::regex("[A-Za-z0-9:_]+"))) {
+                temp2 = result2.suffix().str();
+                if (std::regex_search(temp2, result2, std::regex("[A-Za-z0-9:_]+"))) {
+                    // std::cout << "Accurate: #" << result2.str() << "#" << std::endl;
+                    entityClass.vars.push_back(result2.str());
+                }
+            }
+            temp = result.prefix().str() + result.suffix().str();
+        }
+
+        while (std::regex_search(temp, result, memberMethodRE)) {
+            std::cout << "Search member method: " << result.str() << std::endl;
+            temp = result.prefix().str() + result.suffix().str();
+        }
+        entityClasses.push_back(entityClass);
     }
-}
 
-
-void doBuild() {
-    // Initial configuration
-    readPOM();
-    readApplicationProperties();
-
-    std::string buildCommand = "cd ./out && g++ ../src/cpp/*.cpp ../gen/*.cpp -I ../src/cpp ";
-    analyzeDependencies(&buildCommand);
-
-    // Generate applicationProperties.cpp
-    TemplateHandler templateHandler(programDirectory + "/template/ApplicationProperties.cpp");
-    templateHandler.insertElement("data-appname", appName);
-
-    auto itetator = applicationProperties.begin();
-    while (itetator != applicationProperties.end()) {
-        templateHandler.insertRepeatedElement("0", "data-key", itetator -> first);
-        templateHandler.insertElement("data-value", itetator -> second);
-        itetator ++;
-    }
-    templateHandler.output("gen/ApplicationProperties.cpp");
-
-    // Generate Banner.cpp
-    readBanner();
-
-    // Generate router.cpp by parsing annotations in controller source
-    std::string dir = "src/cpp/controller/";
+    // Parsing controller annotations
+    std::string controllerDir = "src/cpp/controller/";
     std::vector<RestController> restControllers;
-    std::vector<std::string> fileList = getFiles(dir);
+    fileList = getFiles(controllerDir);
     TemplateHandler routerTemplateHandler(programDirectory + "/template/Router.cpp");
 
     for (size_t i = 0; i < fileList.size(); i ++) {
@@ -279,7 +306,7 @@ void doBuild() {
         routerTemplateHandler.insertRepeatedElement("0", "cpp-source", fileList[i]);
         
         RestControllerAnnotationParser restControllerAnnotationParser;
-        restControllerAnnotationParser.scanAnnotations(dir + fileList[i]);
+        restControllerAnnotationParser.scanAnnotations(controllerDir + fileList[i]);
         restControllerAnnotationParser.parse();
         restControllerAnnotationParser.print();
 
@@ -302,7 +329,41 @@ void doBuild() {
                 routerTemplateHandler.insertElement("object-name-3", objectName);
                 routerTemplateHandler.insertElement("function-name", rmp -> functionName);
             } else {
-                std::cout << "Unsuppoted return type: " << rmp -> returnType << std::endl;
+                auto iterator = entityClasses.begin();
+                bool existEntiy = false;
+                if (entityClasses.empty()) {
+                    std::cout << "Info: No entity classes found" << std::endl;
+                }
+                for (; iterator != entityClasses.end(); iterator ++) {
+                    if (iterator -> name == rmp -> returnType) {
+                        existEntiy = true;
+                        break;
+                    } else {
+                        std::cout << "DIFFER: " << iterator -> name << " " << rmp -> returnType << std::endl;
+                    }
+                }
+                if (existEntiy == true) {
+                    routerTemplateHandler.insertRepeatedElement("3", "uri-2", rmp -> value);
+                    routerTemplateHandler.insertElement("class-name-2", rmp -> returnType);
+                    std::string entityName = rmp -> returnType;
+                    if (entityName[0] > 'Z') {
+                        entityName[0] = toupper(entityName[0]);
+                    } else {
+                        entityName[0] = tolower(entityName[0]);
+                    }
+                    routerTemplateHandler.insertElement("object-name-4", entityName);
+                    routerTemplateHandler.insertElement("object-name-5", objectName);
+                    routerTemplateHandler.insertElement("function-name-2", rmp -> functionName);
+                    std::string jsonKeys = "";
+                    for (size_t i = 0; i < iterator -> vars.size(); i ++) {
+                        std::string methodNameRight = iterator -> vars[i];
+                        methodNameRight[0] = toupper(methodNameRight[0]);
+                        jsonKeys += "    jsonParser.createKey(\"" + iterator -> vars[i] + "\", " + entityName + ".get" + methodNameRight + "());\n";
+                    }
+                    routerTemplateHandler.insertElement("json-keys", jsonKeys);
+                } else {
+                    std::cout << "Unsupported return type: " << rmp -> returnType << std::endl;
+                }
             }
         }
         // restControllers.push_back(restControllerAnnotationParser.restController);
@@ -312,8 +373,39 @@ void doBuild() {
     size_t pos = routerTemplateContent -> find("else");
     *routerTemplateContent = routerTemplateContent -> substr(0, pos) + routerTemplateContent -> substr(pos + 5, routerTemplateContent -> length() - pos - 5); 
     routerTemplateHandler.output("gen/Router.cpp");
-    // templateHandler.insertElement("data-appname", appName);
-    
+}
+
+
+void doCreate(std::string projectName) {
+    char userResponse;
+    std::cout << "Are you going to build a Summer Web project? [Y/N]";
+    std::cin >> userResponse;
+    if (toupper(userResponse) == 'Y') {
+        std::cout << "Creating..." << std::endl << std::endl;
+        std::cout << "For web development, some required modules listed below have been auto imported." << std::endl;
+        std::cout << "org.summerframework.summer-web.1.0" << std::endl;
+        std::cout << "org.summerframework.summer-json-wrapper.1.0" << std::endl;
+        std::cout << "org.summerframework.summer-data-sql.1.0" << std::endl << std::endl;;
+
+        std::cout << "Complete. " << std::endl;
+    } else {
+        std::cout << "This part is still in test phase." << std::endl;
+    }
+}
+
+
+void doBuild() {
+    std::string buildCommand = "cd ./out && g++ ../src/cpp/*.cpp ../gen/*.cpp -I ../src/cpp ";
+
+    // Initial configuration
+    readPOM();
+    analyzeDependencies(&buildCommand);
+    // Generate applicationProperties.cpp
+    generateApplicationProperties();
+    // Generate Banner.cpp
+    generateBanner();
+    // Generate router.cpp by parsing annotations in controller source
+    generateRouter();
     
     // Define application name
     if (appName == "") {
@@ -322,6 +414,7 @@ void doBuild() {
         buildCommand += "-o " + appName + " ";
     }
 
+    buildCommand += "-pthread ";
     buildCommand += "-Wl,-rpath ./lib ";
         
     // Build project
@@ -350,7 +443,7 @@ void doRun() {
 void doList(std::string arg) {
     if (arg == "properties") {
         if (applicationProperties.empty()) {
-            readApplicationProperties();
+            // readApplicationProperties();
         }
         auto itetator = applicationProperties.begin();
         while (itetator != applicationProperties.end()) {

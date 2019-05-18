@@ -120,14 +120,4 @@ class Controller
     HttpResponse* response;
 };
 
-class ThreadPool {
-  public:
-    ThreadPool(size_t);
-
-
-  private:
-    std::vector<std::thread> threads;
-    std::queue<std::function<void()>> tasks;
-};
-
 #endif

@@ -1,12 +1,7 @@
-#include <iostream>
-#include <string>
-#include "application.h"
+#include <org/summerframework/core.h>
 
-Application::Application() {
-    this -> properties.insert({"server.port", "8080"});
-    this -> properties.insert({"summer.datasource.password", "xxxxxx"});
-    this -> properties.insert({"summer.datasource.url", "mysql://localhost:3306"});
-    this -> properties.insert({"summer.datasource.username", "root"});
+void ApplicationContext::loadData() {
+    this -> setApplicationProperty("server.port", "1234");
 
-    this -> setName("DemoApplication");
+    this -> setApplicationName("DemoApplication");
 }

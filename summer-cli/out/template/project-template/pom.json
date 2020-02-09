@@ -1,0 +1,11 @@
+{
+    "project": {
+        "name": "{{projectName}}",
+        "version": "{{projectVersion}}",
+        "author": "{{projectAuthor}}"
+    },
+
+    "dependencies": {
+
+    }
+}

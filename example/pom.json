@@ -1,0 +1,19 @@
+{
+    "project": {
+        "name": "DemoApplication",
+        "version": "0.0.1",
+        "author": ""
+    },
+
+    "dependencies": [
+        {
+            "id": "org.summerframework.core"
+        },
+        {
+            "id": "org.summerframework.web"
+        },
+        {
+            "id": "org.summerframework.data.keyvalue"
+        }
+    ]
+}
